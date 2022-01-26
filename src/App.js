@@ -1,18 +1,73 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect,useState } from 'react'
+import Form from './components/Form'
+import Header from './components/Header'
+import Layout from './components/Layout'
+import Lists from './components/Lists'
 
-function App() {
+
+const App = () => {
+  const [error, setError] = useState(null)
+  const [todo, setTodo] = useState('')
+  const [todos, setTodos] = useState([])
+
+  useEffect(() => {
+    const storedTodos = JSON.parse(localStorage.getItem('todos'))
+    if (storedTodos) setTodos(storedTodos)
+  }, [])
+
+  // saving the todos in browser storage to prevent loss of todos on refreshing tab
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos))
+  }, [todos])
+
+  const submitHandler = (e) => {
+    e.preventDefault()
+
+    if (todo.length < 5) {
+      setError('Bnạ nhập ít nhất 5 kí tự!')
+      return false
+    }
+
+    setTodos([{ id: Date.now(), title: todo, done: false }, ...todos])
+
+    setTodo('')
+    setError(null)
+  }
+
+  const delHandler = (todoId) => {
+    if (window.confirm('Bạn chắc chắn muốn xóa không ?')) {
+      const updatedTodos = todos.filter((item) => item.id !== todoId)
+
+      setTodos(updatedTodos)
+    }
+  }
+
+  const doneHandler = (todoId) => {
+    const index = todos.findIndex((emp) => emp.id === todoId)
+    const newTodo = [...todos]
+
+    newTodo[index] = {
+      id: todos[index].id,
+      title: todos[index].title,
+      done: !todos[index].done,
+    }
+
+    setTodos(newTodo)
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Hello word
-        </p>
-      
-      </header>
-    </div>
-  );
+    <Layout>
+      <Header />
+      <Form
+        error={error}
+        value={todo}
+        submit={submitHandler}
+        onChange={(e) => setTodo(e.target.value)}
+      />
+      <hr className='border-primary' />
+      <Lists todos={todos} delHandler={delHandler} doneHandler={doneHandler} />
+    </Layout>
+  )
 }
 
-export default App;
+export default App
